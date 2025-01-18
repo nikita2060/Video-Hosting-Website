@@ -5,19 +5,28 @@ import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const registerUser = asyncHandler(async (req,res) => {
-    //ask username ,email,password and confirm password and save  
-    const{fullName,email,username,password} = req.body
+    //ask username ,email,password and confirm password and save
+    console.log("registerUser route hit");
+    try {
+        const{fullName,email,username,password} = req.body
+        console.log("Request body:", req.body);
     // console.log(fullname)
     //validation if any fields are empty or not
-    if(!fullName || !email || !username || !password){
-        throw new ApiError("Please fill all the fields")
+        if(!fullName || !email || !username || !password){
+            throw new ApiError("Please fill all the fields")
     }
+        
+    } catch (error) {
+        console.log("Error while validating request body:", error);
+    }  
+    
 
     //check if user already exists and again registering
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or:[{email:email},{username:username}]
     })
     if(existedUser){
+        console.log("User already exists:", existedUser);
         throw new ApiError(409,"User already exists!")
     }
     //check for images,avatar
@@ -35,7 +44,7 @@ const registerUser = asyncHandler(async (req,res) => {
     }
 
     //create a new user
-    User.create({
+    const newUser = await User.create({
         fullName,
         email,
         username:username.toLowerCase(),
@@ -45,11 +54,13 @@ const registerUser = asyncHandler(async (req,res) => {
 
     })
     //check user creation
-    const createdUser = await User.findById(username._id).select(
+    const createdUser = await User.findById(newUser._id).select(
         "-password -refreshToken"
     )
+    console.log("New user created:", newUser);
 
     if(!createdUser){
+        console.error("Created user not found in database");
         throw new ApiError(500,"Something went wrong while creating user!")
     }
 
