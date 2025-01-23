@@ -113,7 +113,12 @@ const loginUser = asyncHandler(async(req,res)=>{
     statusCode(200).//res.status code is chainable. You can call other methods after it.
     cookie("accessToken",accessToken,options). //options allows to set cookie properties like httpOnly,secure etc i.e. for security purpose
     cookie("refreshToken",refreshToken,options).
-    json(new ApiResponse(200,{user:loggedInUser,accessToken,refreshToken},"User logged in successfully!"))
+    json(
+        new ApiResponse
+        (200,
+        {user:loggedInUser,accessToken,refreshToken},
+        "User logged in successfully!")
+    )
     //if password does not match then send error message
     //send response of successful login
 
