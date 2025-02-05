@@ -109,11 +109,11 @@ const loginUser = asyncHandler(async(req,res)=>{
         secure : true
     }
 
-    res.
-    statusCode(200).//res.status code is chainable. You can call other methods after it.
-    cookie("accessToken",accessToken,options). //options allows to set cookie properties like httpOnly,secure etc i.e. for security purpose
-    cookie("refreshToken",refreshToken,options).
-    json(
+    return res
+    .statusCode(200)//res.status code is chainable. You can call other methods after it.
+    .cookie("accessToken",accessToken,options)//options allows to set cookie properties like httpOnly,secure etc i.e. for security purpose
+    .cookie("refreshToken",refreshToken,options)
+    .json(
         new ApiResponse
         (200,
         {user:loggedInUser,accessToken,refreshToken},
@@ -123,6 +123,9 @@ const loginUser = asyncHandler(async(req,res)=>{
     //send response of successful login
 
 
+})
+
+const logoutUser = asyncHandler(async(req,res)=>{
 })
 
 export { registerUser,loginUser }
