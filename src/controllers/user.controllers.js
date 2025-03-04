@@ -4,6 +4,7 @@ import {User} from "../models/user.models.js";
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+
 const registerUser = asyncHandler(async (req,res) =>
 {
     //ask username ,email,password and confirm password and save
@@ -13,7 +14,12 @@ const registerUser = asyncHandler(async (req,res) =>
         console.log("Request body:", req.body);
     // console.log(fullname)
     //validation if any fields are empty or not
-        if(!fullName || !email || !username || !password){
+    //username is undefined (falsy)
+    // email is "nikky@example.com" (truthy)
+
+    // !username || !email => true || false => true
+    // !(username || email) => !(undefined || "nikky@example.com") => !true => false
+        if(!(fullName || email || username || password)){    // or just write !fullName && !email .. which means if both are not available then only error will be thrown
             throw new ApiError("Please fill all the fields")
         }
      
@@ -71,7 +77,7 @@ const registerUser = asyncHandler(async (req,res) =>
 const loginUser = asyncHandler(async(req,res)=>{
     //ask username or email and password 
     const {username,email,password} = req.body
-    if(!email || !username || !password){
+    if(!(email || username || password)){
         throw new ApiError(400,"Please fill all the fields")
     }
     //check if user exits
@@ -126,6 +132,30 @@ const loginUser = asyncHandler(async(req,res)=>{
 })
 
 const logoutUser = asyncHandler(async(req,res)=>{
+    await user.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set:
+            {
+                refreshToken : undefined
+            }
+        },
+            {
+                new:true
+            }
+
+        )
+        const options={
+            httpOnly :true,
+            secure : true
+        }
+    
+        return res
+        .statusCode(200)//res.status code is chainable. You can call other methods after it.
+        .clearCookie("accessToken",options)//options allows to set cookie properties like httpOnly,secure etc i.e. for security purpose
+        .clearCookie("refreshToken",options)
+        .json(new ApiResponse(200,{},"User logged out successfully!"))
+    //remove refresh token from database
 })
 
 export { registerUser,loginUser,logoutUser }
