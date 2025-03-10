@@ -369,6 +369,15 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>{
         }
 
     ])
+    // console.log("Channel:",channel);
+
+    if(!channel?.length){
+        throw new ApiError(404,"Channel not found!")
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200,channel[0],"Channel details fetched successfully!"))
 
 })
 
@@ -381,5 +390,6 @@ export { registerUser,
     getCurrentUser,
     updateUserDetails,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getUserChannelProfile
 }
