@@ -4,6 +4,7 @@ import {User} from "../models/user.models.js";
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import { Subscription } from "../models/subscription.models.js";
 
 const registerUser = asyncHandler(async (req,res) =>
 {
@@ -228,7 +229,7 @@ const changePassword = asyncHandler(async(req,res)=>{
 const getCurrentUser = asyncHandler(async(req,res)=>{
     return res
     .status(200)
-    .json(200,req.user,"User details fetched successfully!")
+    .json( new ApiResponse(200,req.user,"User details fetched successfully!"))
 })
 
 const updateUserDetails = asyncHandler(async(req,res)=>{
@@ -277,6 +278,9 @@ const updateUserAvatar = asyncHandler(async(req,res)=>{
         {new : true} //new:true will return updated document
     ).select("-password ")
 
+    //TODO: Delete old avatar from cloudinary
+    
+
     return res
     .status(200)
     .json(new ApiResponse(200,user,"Avatar updated successfully!"))
@@ -312,6 +316,50 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
 
 
 
+
+})
+
+const getUserChannelProfile = asyncHandler(async(req,res)=>{
+    const {username} = req.params
+    if(!username?.trim()){  // trim is important because if user enters space instead of name then it will be considered as truthy value and db will look for spaces in database that is useless
+        throw new ApiError(400,"Please provide username!")
+    }
+
+    const channel = User.aggregate([   //channel just stores the result temporarily which has subscribers array appended in users collection ,no change is made in db, it is just for fetching purpose
+        {
+            $match:{
+                username : username?.toLowerCase()  //it is important to fetch _id . we can also directly compare id 
+                                                    //since i need subscriber count of given username only so i am using match like where username="nikita" in sql
+            },
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",  // this id is got only when we match above username and _id of that user is passed here for comparision
+                foreignField:"channel", //it takes channel from subsceiptions collection
+                as:"subscribers" // it creates new array subscribers and stores the document that matches of subscription collection 
+            },
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",
+                foreignField:"subscriber",
+                as:"subscribedTo"
+            },
+            $addFields:{
+                subscriberCount:{ $size:"$subscribers"},
+                channelSubscribedCount:{ $size:"$subsribedTo" },
+                isSubscribed:{
+                    $cond:{  //MongoDB aggregation operator.its syntax is $cond: { if: <condition>, then: <true_value>, else: <false_value> }
+                       if: { $in: [req.user?._id,"$subscribers.subscriber"]}, //req.user._id gives the user that is browsing channel with username in req.header above and 
+                          // $in is used in subscribers array which has  { "subscriber": "", "channel": "" }as it is like in subscription model so if user
+                          //subscribes channel then his id will be in subscriber field of this array as channel is only one so channel shouldnot be checked
+                          then:true,
+                          else:false    
+
+                    }
+                }
+            }
+        }
+
+    ])
 
 })
 
