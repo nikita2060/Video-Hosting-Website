@@ -60,7 +60,8 @@ userSchema.methods.isPasswordCorrect = async function (password){
 userSchema.methods.generateAccessToken = function(){
     return jwt.sign(
         {
-            _id : this.id,
+            _id : this.id,  //even though this._id is an ObjectId, this.id automatically converts it to a string.
+            //because jwt stores everything as a string
             email : this.email,
             username: this.username,
             fullName: this.fullName
