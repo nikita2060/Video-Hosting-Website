@@ -13,14 +13,14 @@ const registerUser = asyncHandler(async (req,res) =>
     try {
         const{fullName,email,username,password} = req.body
         console.log("Request body:", req.body);
-    // console.log(fullname)
-    //validation if any fields are empty or not
+    
     //username is undefined (falsy)
     // email is "nikky@example.com" (truthy)
 
     // !username || !email => true || false => true
-    // !(username || email) => !(undefined || "nikky@example.com") => !true => false
-        if(!(fullName || email || username || password)){    // or just write !fullName && !email .. which means if both are not available then only error will be thrown
+    // !(username || email) => !(undefined || "nikky@example.com") => !true => false so we cannot give this syntax as it wont throw error even if name is missing
+        if(!(fullName && email && username && password)){    // or just write !fullName && !email .. which means if both are not available then only error will be thrown
+          // but i need to throw error if any of the field is not available so i need to give && in between them if all are present then it will be false and error won't be thrown
             throw new ApiError("Please fill all the fields")
         }
      
@@ -78,7 +78,7 @@ const registerUser = asyncHandler(async (req,res) =>
 const loginUser = asyncHandler(async(req,res)=>{
     //ask username or email and password 
     const {username,email,password} = req.body
-    if(!(email || username || password)){
+    if(!(email && username && password)){
         throw new ApiError(400,"Please fill all the fields")
     }
     //check if user exits
@@ -117,7 +117,7 @@ const loginUser = asyncHandler(async(req,res)=>{
     }
 
     return res
-    .statusCode(200)//res.status code is chainable. You can call other methods after it.
+    .status(200)//res.status code is chainable. You can call other methods after it.
     .cookie("accessToken",accessToken,options)//options allows to set cookie properties like httpOnly,secure etc i.e. for security purpose
     .cookie("refreshToken",refreshToken,options)
     .json(
